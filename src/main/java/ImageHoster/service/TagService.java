@@ -11,8 +11,8 @@ public class TagService {
     @Autowired
     private TagRepository tagRepository;
 
-    public Tag getTagByName(String title) {
-        return tagRepository.findTag(title);
+    public Tag getTagByName(String tag) {
+        return tagRepository.findTag(tag);
     }
 
     public Tag createTag(Tag tag) {
