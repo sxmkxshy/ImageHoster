@@ -27,6 +27,9 @@ public class ImageController {
     @Autowired
     private TagService tagService;
 
+    //initialize an error message for un-authorized edits/deletes
+    String error = "Only the owner of the image can edit the image";
+
     //This method displays all the images in the user home page after successful login
     @RequestMapping("images")
     public String getUserImages(Model model) {
@@ -93,13 +96,22 @@ public class ImageController {
     //The method first needs to convert the list of all the tags to a string containing all the tags separated by a comma and then add this string in a Model type object
     //This string is then displayed by 'edit.html' file as previous tags of an image
     @RequestMapping(value = "/editImage")
-    public String editImage(@RequestParam("imageId") Integer imageId, Model model) {
+    public String editImage(@RequestParam("imageId") Integer imageId, Model model,HttpSession session) {
+        User user = (User) session.getAttribute("loggeduser");
         Image image = imageService.getImage(imageId);
+        User imageAuthor = image.getUser();
+        if (user.getId()==imageAuthor.getId()){
+            String tags = convertTagsToString(image.getTags());
+            model.addAttribute("image", image);
+            model.addAttribute("tags",tags);
+            return "images/edit";
+        }
+        else{
+            model.addAttribute("image", image);
+            model.addAttribute("editError", error);
+            return "images/image";
+        }
 
-        String tags = convertTagsToString(image.getTags());
-        model.addAttribute("image", image);
-        model.addAttribute("tags",tags);
-        return "images/edit";
     }
 
     //This controller method is called when the request pattern is of type 'images/edit' and also the incoming request is of PUT type
