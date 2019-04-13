@@ -28,7 +28,8 @@ public class ImageController {
     private TagService tagService;
 
     //initialize an error message for un-authorized edits/deletes
-    String error = "Only the owner of the image can edit the image";
+    String editError = "Only the owner of the image can edit the image";
+    String deleteError = "Only the owner of the image can delete the image";
 
     //This method displays all the images in the user home page after successful login
     @RequestMapping("images")
@@ -51,7 +52,7 @@ public class ImageController {
     //@RequestMapping("/images/{imageId}/{title}")
     @RequestMapping("/images/{imageId}")
     public String showImage(@PathVariable("imageId") Integer imageId, Model model) {
-        Image image = imageService.getImageById(imageId);
+        Image image = imageService.getImage(imageId);
         model.addAttribute("image", image);
         model.addAttribute("tags",image.getTags());
         return "images/image";
@@ -108,7 +109,7 @@ public class ImageController {
         }
         else{
             model.addAttribute("image", image);
-            model.addAttribute("editError", error);
+            model.addAttribute("editError", editError);
             return "images/image";
         }
 
@@ -153,9 +154,19 @@ public class ImageController {
     //The method calls the deleteImage() method in the business logic passing the id of the image to be deleted
     //Looks for a controller method with request mapping of type '/images'
     @RequestMapping(value = "/deleteImage", method = RequestMethod.DELETE)
-    public String deleteImageSubmit(@RequestParam(name = "imageId") Integer imageId) {
-        imageService.deleteImage(imageId);
-        return "redirect:/images";
+    public String deleteImageSubmit(@RequestParam(name = "imageId") Integer imageId,Model model,HttpSession session) {
+        User user = (User) session.getAttribute("loggeduser");
+        Image image = imageService.getImage(imageId);
+        User imageAuthor = image.getUser();
+        if (user.getId()==imageAuthor.getId()) {
+            imageService.deleteImage(imageId);
+            return "redirect:/images";
+        }
+        else {
+            model.addAttribute("image", image);
+            model.addAttribute("deleteError", deleteError);
+            return "images/image";
+        }
     }
 
 
