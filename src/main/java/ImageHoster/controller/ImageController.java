@@ -27,6 +27,10 @@ public class ImageController {
     @Autowired
     private TagService tagService;
 
+    //initialize an error message for un-authorized edits/deletes
+    String editError = "Only the owner of the image can edit the image";
+    String deleteError = "Only the owner of the image can delete the image";
+
     //This method displays all the images in the user home page after successful login
     @RequestMapping("images")
     public String getUserImages(Model model) {
@@ -45,9 +49,10 @@ public class ImageController {
     //Also now you need to add the tags of an image in the Model type object
     //Here a list of tags is added in the Model type object
     //this list is then sent to 'images/image.html' file and the tags are displayed
-    @RequestMapping("/images/{title}")
-    public String showImage(@PathVariable("title") String title, Model model) {
-        Image image = imageService.getImageByTitle(title);
+    //@RequestMapping("/images/{imageId}/{title}")
+    @RequestMapping("/images/{imageId}")
+    public String showImage(@PathVariable("imageId") Integer imageId, Model model) {
+        Image image = imageService.getImage(imageId);
         model.addAttribute("image", image);
         model.addAttribute("tags",image.getTags());
         return "images/image";
@@ -92,13 +97,22 @@ public class ImageController {
     //The method first needs to convert the list of all the tags to a string containing all the tags separated by a comma and then add this string in a Model type object
     //This string is then displayed by 'edit.html' file as previous tags of an image
     @RequestMapping(value = "/editImage")
-    public String editImage(@RequestParam("imageId") Integer imageId, Model model) {
+    public String editImage(@RequestParam("imageId") Integer imageId, Model model,HttpSession session) {
+        User user = (User) session.getAttribute("loggeduser");
         Image image = imageService.getImage(imageId);
+        User imageAuthor = image.getUser();
+        if (user.getId()==imageAuthor.getId()){
+            String tags = convertTagsToString(image.getTags());
+            model.addAttribute("image", image);
+            model.addAttribute("tags",tags);
+            return "images/edit";
+        }
+        else{
+            model.addAttribute("image", image);
+            model.addAttribute("editError", editError);
+            return "images/image";
+        }
 
-        String tags = convertTagsToString(image.getTags());
-        model.addAttribute("image", image);
-        model.addAttribute("tags",tags);
-        return "images/edit";
     }
 
     //This controller method is called when the request pattern is of type 'images/edit' and also the incoming request is of PUT type
@@ -132,7 +146,7 @@ public class ImageController {
         updatedImage.setDate(new Date());
 
         imageService.updateImage(updatedImage);
-        return "redirect:/images/" + updatedImage.getTitle();
+        return "redirect:/images/" + updatedImage.getId();
     }
 
 
@@ -140,9 +154,19 @@ public class ImageController {
     //The method calls the deleteImage() method in the business logic passing the id of the image to be deleted
     //Looks for a controller method with request mapping of type '/images'
     @RequestMapping(value = "/deleteImage", method = RequestMethod.DELETE)
-    public String deleteImageSubmit(@RequestParam(name = "imageId") Integer imageId) {
-        imageService.deleteImage(imageId);
-        return "redirect:/images";
+    public String deleteImageSubmit(@RequestParam(name = "imageId") Integer imageId,Model model,HttpSession session) {
+        User user = (User) session.getAttribute("loggeduser");
+        Image image = imageService.getImage(imageId);
+        User imageAuthor = image.getUser();
+        if (user.getId()==imageAuthor.getId()) {
+            imageService.deleteImage(imageId);
+            return "redirect:/images";
+        }
+        else {
+            model.addAttribute("image", image);
+            model.addAttribute("deleteError", deleteError);
+            return "images/image";
+        }
     }
 
 
