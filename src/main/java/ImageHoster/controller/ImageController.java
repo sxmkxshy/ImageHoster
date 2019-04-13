@@ -2,9 +2,11 @@ package ImageHoster.controller;
 
 import ImageHoster.model.Image;
 import ImageHoster.model.Tag;
+import ImageHoster.model.Comment;
 import ImageHoster.model.User;
 import ImageHoster.service.ImageService;
 import ImageHoster.service.TagService;
+import ImageHoster.service.CommentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -26,6 +28,9 @@ public class ImageController {
 
     @Autowired
     private TagService tagService;
+
+    @Autowired
+    private CommentService commentService;
 
     //initialize an error message for un-authorized edits/deletes
     String editError = "Only the owner of the image can edit the image";
@@ -55,11 +60,26 @@ public class ImageController {
         Image image = imageService.getImage(imageId);
         model.addAttribute("image", image);
         model.addAttribute("tags",image.getTags());
+        model.addAttribute("comments",image.getComments());
         return "images/image";
+    }
+
+
+    @RequestMapping("/uploadComments")
+    public String uploadComments(@RequestParam("imageId") Integer imageId,@RequestParam("comment") String comment,Comment newComment,Model model, HttpSession session) throws IOException{
+        User user = (User) session.getAttribute("loggeduser");
+        newComment.setUser(user);
+        newComment.setDate(new Date());
+        Image image = imageService.getImage(imageId);
+        newComment.setImage(image);
+        newComment.setText(comment);
+        commentService.createComment(newComment);
+        return showImage(imageId,model);
     }
 
     //This controller method is called when the request pattern is of type 'images/upload'
     //The method returns 'images/upload.html' file
+
     @RequestMapping("/images/upload")
     public String newImage() {
         return "images/upload";

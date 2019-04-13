@@ -8,7 +8,7 @@ import java.util.List;
 @Entity
 //@Table annotation provides more options to customize the mapping.
 //Here the name of the table to be created in the database is explicitly mentioned as 'Comment'.
-// Hence the table named 'Comment' will be created in the database with all the columns mapped to all the attributes in 'Tag' class
+// Hence the table named 'Comment' will be created in the database with all the columns mapped to all the attributes in 'Comment' class
 @Table(name = "Comment")
 public class Comment {
 

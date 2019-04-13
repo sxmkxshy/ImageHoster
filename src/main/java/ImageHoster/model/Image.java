@@ -57,6 +57,14 @@ public class Image {
     public Image() {
     }
 
+    public List<Comment> getComments() {
+        return comments;
+    }
+
+    public void setComments(List<Comment> comments) {
+        this.comments = comments;
+    }
+
     public Image(int i, String s, String s1, Date date) {
         this.id = i;
         this.title = s;
